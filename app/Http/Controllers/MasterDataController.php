@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\TahunAkademik;
-use App\Models\Jurusan;
+use App\Models\TahunMasuk;
+use App\Models\PeriodeBilling;
+use App\Models\RentangUkt;
 use App\Models\Prodi;
+use App\Models\Jurusan;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\StatusPembayaran;
@@ -185,7 +188,7 @@ class MasterDataController extends Controller
 
     public function statusPembayaranIndex()
     {
-        $data = StatusPembayaran::orderBy('nama_status')->get();
+        $data = StatusPembayaran::orderBy('id')->get();
         return view($this->role() . '.master-data.status-pembayaran', compact('data'));
     }
 
@@ -220,7 +223,7 @@ class MasterDataController extends Controller
 
     public function sumberPembiayaanIndex()
     {
-        $data = SumberPembiayaan::orderBy('nama_sumber')->get();
+        $data = SumberPembiayaan::orderBy('id')->get();
         return view($this->role() . '.master-data.sumber-pembiayaan', compact('data'));
     }
 
@@ -249,11 +252,47 @@ class MasterDataController extends Controller
         return back()->with('success', 'Sumber pembiayaan berhasil dihapus!');
     }
 
+    // === TAHUN MASUK (Admin only) ===
+
+    public function tahunMasukIndex()
+    {
+        $data = TahunMasuk::with('tahunAkademik')->orderByDesc('tahun')->get();
+        $tahunAkademikList = TahunAkademik::orderByDesc('tahun_akademik')->get();
+        return view('admin.master-data.tahun-masuk', compact('data', 'tahunAkademikList'));
+    }
+
+    public function tahunMasukStore(Request $request)
+    {
+        $request->validate([
+            'tahun'             => 'required|string|max:10|unique:tahun_masuk,tahun',
+            'tahun_akademik_id' => 'required|exists:tahun_akademik,id',
+        ]);
+        TahunMasuk::create($request->only('tahun', 'tahun_akademik_id'));
+        return back()->with('success', 'Tahun masuk berhasil ditambahkan!');
+    }
+
+    public function tahunMasukUpdate(Request $request, $id)
+    {
+        $item = TahunMasuk::findOrFail($id);
+        $request->validate([
+            'tahun'             => 'required|string|max:10|unique:tahun_masuk,tahun,' . $id,
+            'tahun_akademik_id' => 'required|exists:tahun_akademik,id',
+        ]);
+        $item->update($request->only('tahun', 'tahun_akademik_id'));
+        return back()->with('success', 'Tahun masuk berhasil diperbarui!');
+    }
+
+    public function tahunMasukDestroy($id)
+    {
+        TahunMasuk::findOrFail($id)->delete();
+        return back()->with('success', 'Tahun masuk berhasil dihapus!');
+    }
+
     // === LEVEL UKT ===
 
     public function levelUktIndex()
     {
-        $data = LevelUkt::orderBy('nama_level')->get();
+        $data = LevelUkt::orderBy('id')->get();
         return view($this->role() . '.master-data.level-ukt', compact('data'));
     }
 
@@ -282,5 +321,128 @@ class MasterDataController extends Controller
     {
         LevelUkt::findOrFail($id)->delete();
         return back()->with('success', 'Level UKT berhasil dihapus!');
+    }
+
+    // === PERIODE BILLING (Keuangan only) ===
+
+    public function periodeBillingIndex()
+    {
+        $data = PeriodeBilling::with('tahunAkademik')->orderByDesc('id')->get();
+        $tahunAkademikList = TahunAkademik::orderByDesc('tahun_akademik')->get();
+        $tahunList = $tahunAkademikList->pluck('tahun_akademik')->unique()->values();
+        return view('keuangan.periode-billing', compact('data', 'tahunAkademikList', 'tahunList'));
+    }
+
+    public function periodeBillingStore(Request $request)
+    {
+        $request->validate([
+            'tahun_akademik_id' => 'required|exists:tahun_akademik,id',
+            'periode_mulai'     => 'required|date',
+            'periode_selesai'   => 'required|date|after_or_equal:periode_mulai',
+            'status'            => 'required|in:Aktif,Tidak Aktif',
+        ]);
+        PeriodeBilling::create($request->only('tahun_akademik_id', 'periode_mulai', 'periode_selesai', 'status'));
+        return back()->with('success', 'Periode billing berhasil ditambahkan!');
+    }
+
+    public function periodeBillingUpdate(Request $request, $id)
+    {
+        $item = PeriodeBilling::findOrFail($id);
+        $request->validate([
+            'tahun_akademik_id' => 'required|exists:tahun_akademik,id',
+            'periode_mulai'     => 'required|date',
+            'periode_selesai'   => 'required|date|after_or_equal:periode_mulai',
+        ]);
+        $item->update($request->only('tahun_akademik_id', 'periode_mulai', 'periode_selesai'));
+        return back()->with('success', 'Periode billing berhasil diperbarui!');
+    }
+
+    public function periodeBillingToggle($id)
+    {
+        $item = PeriodeBilling::findOrFail($id);
+        $item->update(['status' => $item->status === 'Aktif' ? 'Tidak Aktif' : 'Aktif']);
+        return back()->with('success', 'Status periode billing berhasil diubah!');
+    }
+
+    public function periodeBillingDestroy($id)
+    {
+        PeriodeBilling::findOrFail($id)->delete();
+        return back()->with('success', 'Periode billing berhasil dihapus!');
+    }
+
+    // === RENTANG UKT (Keuangan only) ===
+
+    public function rentangUktIndex()
+    {
+        $data = RentangUkt::with('prodi.jurusan', 'tahunMasuk.tahunAkademik', 'levelUkt')
+            ->orderBy('prodi_id')->orderBy('tahun_masuk_id')->orderBy('level_ukt_id')
+            ->get()
+            ->groupBy(fn($r) => $r->prodi_id . '_' . $r->tahun_masuk_id);
+
+        $prodiList     = Prodi::orderBy('nama_prodi')->get();
+        $tahunMasukList = TahunMasuk::with('tahunAkademik')->orderByDesc('tahun')->get();
+        $levelUktList  = LevelUkt::orderBy('id')->get();
+
+        return view('keuangan.master-data.rentang-ukt', compact('data', 'prodiList', 'tahunMasukList', 'levelUktList'));
+    }
+
+    public function rentangUktCreate()
+    {
+        $prodiList      = Prodi::orderBy('nama_prodi')->get();
+        $tahunMasukList = TahunMasuk::with('tahunAkademik')->orderByDesc('tahun')->get();
+        $levelUktList   = LevelUkt::orderBy('id')->get();
+
+        return view('keuangan.master-data.rentang-ukt-create', compact('prodiList', 'tahunMasukList', 'levelUktList'));
+    }
+
+    public function rentangUktStore(Request $request)
+    {
+        $request->validate([
+            'prodi_id'       => 'required|exists:prodi,id',
+            'tahun_masuk_id' => 'required|exists:tahun_masuk,id',
+            'nilai'          => 'required|array',
+            'nilai.*'        => 'nullable|integer|min:0',
+            'akun_rekening'  => 'nullable|array',
+            'akun_rekening.*'=> 'nullable|string|max:100',
+        ]);
+
+        foreach ($request->nilai as $levelUktId => $nilai) {
+            RentangUkt::updateOrCreate(
+                [
+                    'prodi_id'       => $request->prodi_id,
+                    'tahun_masuk_id' => $request->tahun_masuk_id,
+                    'level_ukt_id'   => $levelUktId,
+                ],
+                [
+                    'nilai'         => $nilai ?? 0,
+                    'akun_rekening' => $request->akun_rekening[$levelUktId] ?? null,
+                ]
+            );
+        }
+
+        return back()->with('success', 'Konfigurasi UKT berhasil disimpan!');
+    }
+
+    public function rentangUktUpdate(Request $request, $id)
+    {
+        $item = RentangUkt::findOrFail($id);
+        $request->validate([
+            'nilai'         => 'required|integer|min:0',
+            'akun_rekening' => 'nullable|string|max:100',
+        ]);
+        $item->update($request->only('nilai', 'akun_rekening'));
+        return back()->with('success', 'Rentang UKT berhasil diperbarui!');
+    }
+
+    public function rentangUktDestroy($id)
+    {
+        RentangUkt::findOrFail($id)->delete();
+        return back()->with('success', 'Rentang UKT berhasil dihapus!');
+    }
+
+    public function rentangUktDestroyGroup($prodi_id, $tahun_masuk_id)
+    {
+        RentangUkt::where('prodi_id', $prodi_id)->where('tahun_masuk_id', $tahun_masuk_id)->delete();
+        return back()->with('success', 'Konfigurasi UKT berhasil dihapus!');
     }
 }

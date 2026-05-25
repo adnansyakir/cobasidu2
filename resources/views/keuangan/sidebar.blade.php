@@ -50,9 +50,9 @@
     <span class="nav-icon">💰</span> Invoice
 </a>
 
-<a href="{{ route('keuangan.setting-invoice') }}" class="nav-item {{ request()->routeIs('keuangan.setting-invoice') ? 'active' : '' }}">
+<!-- <a href="{{ route('keuangan.setting-invoice') }}" class="nav-item {{ request()->routeIs('keuangan.setting-invoice') ? 'active' : '' }}">
     <span class="nav-icon">🔧</span> Setting Tampil Invoice
-</a>
+</a> -->
 
 <a href="{{ route('keuangan.periode-billing') }}" class="nav-item {{ request()->routeIs('keuangan.periode-billing') ? 'active' : '' }}">
     <span class="nav-icon">📅</span> Periode dan Billing

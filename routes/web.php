@@ -127,6 +127,12 @@ Route::middleware('auth')->group(function () {
             Route::post('/level-ukt', [MasterDataController::class, 'levelUktStore'])->name('admin.master-data.level-ukt.store');
             Route::put('/level-ukt/{id}', [MasterDataController::class, 'levelUktUpdate'])->name('admin.master-data.level-ukt.update');
             Route::delete('/level-ukt/{id}', [MasterDataController::class, 'levelUktDestroy'])->name('admin.master-data.level-ukt.destroy');
+
+            // Tahun Masuk CRUD
+            Route::get('/tahun-masuk', [MasterDataController::class, 'tahunMasukIndex'])->name('admin.master-data.tahun-masuk');
+            Route::post('/tahun-masuk', [MasterDataController::class, 'tahunMasukStore'])->name('admin.master-data.tahun-masuk.store');
+            Route::put('/tahun-masuk/{id}', [MasterDataController::class, 'tahunMasukUpdate'])->name('admin.master-data.tahun-masuk.update');
+            Route::delete('/tahun-masuk/{id}', [MasterDataController::class, 'tahunMasukDestroy'])->name('admin.master-data.tahun-masuk.destroy');
         });
         Route::get('/invoice', [DashboardController::class, 'adminInvoice'])->name('admin.invoice');
         Route::get('/statistik-prodi', [DashboardController::class, 'adminStatistikProdi'])->name('admin.statistik-prodi');
@@ -145,7 +151,13 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/mahasiswa', [DashboardController::class, 'keuanganMahasiswa'])->name('keuangan.mahasiswa');
         Route::prefix('master-data')->group(function () {
-            Route::get('/rentang-ukt', [DashboardController::class, 'keuanganMasterRentangUkt'])->name('keuangan.master-data.rentang-ukt');
+            // Rentang UKT CRUD
+            Route::get('/rentang-ukt/create', [MasterDataController::class, 'rentangUktCreate'])->name('keuangan.master-data.rentang-ukt.create');
+            Route::get('/rentang-ukt', [MasterDataController::class, 'rentangUktIndex'])->name('keuangan.master-data.rentang-ukt');
+            Route::post('/rentang-ukt', [MasterDataController::class, 'rentangUktStore'])->name('keuangan.master-data.rentang-ukt.store');
+            Route::put('/rentang-ukt/{id}', [MasterDataController::class, 'rentangUktUpdate'])->name('keuangan.master-data.rentang-ukt.update');
+            Route::delete('/rentang-ukt/{id}', [MasterDataController::class, 'rentangUktDestroy'])->name('keuangan.master-data.rentang-ukt.destroy');
+            Route::delete('/rentang-ukt/{prodi_id}/{tahun_masuk_id}', [MasterDataController::class, 'rentangUktDestroyGroup'])->name('keuangan.master-data.rentang-ukt.destroy-group');
 
             // Status Pembayaran CRUD
             Route::get('/status-pembayaran', [MasterDataController::class, 'statusPembayaranIndex'])->name('keuangan.master-data.status-pembayaran');
@@ -169,7 +181,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/setting-banding', [DashboardController::class, 'keuanganSettingBanding'])->name('keuangan.setting-banding');
         Route::get('/invoice', [DashboardController::class, 'keuanganInvoice'])->name('keuangan.invoice');
         Route::get('/setting-invoice', [DashboardController::class, 'keuanganSettingInvoice'])->name('keuangan.setting-invoice');
-        Route::get('/periode-billing', [DashboardController::class, 'keuanganPeriodeBilling'])->name('keuangan.periode-billing');
+        // Periode Billing CRUD
+        Route::get('/periode-billing', [MasterDataController::class, 'periodeBillingIndex'])->name('keuangan.periode-billing');
+        Route::post('/periode-billing', [MasterDataController::class, 'periodeBillingStore'])->name('keuangan.periode-billing.store');
+        Route::put('/periode-billing/{id}', [MasterDataController::class, 'periodeBillingUpdate'])->name('keuangan.periode-billing.update');
+        Route::patch('/periode-billing/{id}/toggle', [MasterDataController::class, 'periodeBillingToggle'])->name('keuangan.periode-billing.toggle');
+        Route::delete('/periode-billing/{id}', [MasterDataController::class, 'periodeBillingDestroy'])->name('keuangan.periode-billing.destroy');
     });
 
     // =============================================

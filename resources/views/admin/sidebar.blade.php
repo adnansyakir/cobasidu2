@@ -43,6 +43,9 @@
         <a href="{{ route('admin.master-data.level-ukt') }}" class="nav-item {{ request()->routeIs('admin.master-data.level-ukt') ? 'active' : '' }}">
             <span class="nav-icon">🎚️</span> Level UKT
         </a>
+        <a href="{{ route('admin.master-data.tahun-masuk') }}" class="nav-item {{ request()->routeIs('admin.master-data.tahun-masuk') ? 'active' : '' }}">
+            <span class="nav-icon">📆</span> Tahun Masuk
+        </a>
     </div>
 </div>
 
