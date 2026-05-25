@@ -22,7 +22,9 @@ class MasterDataController extends Controller
 {
     private function role(): string
     {
-        return Auth::user()->getRoleName();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        return $user->getRoleName();
     }
 
     // === TAHUN AKADEMIK ===

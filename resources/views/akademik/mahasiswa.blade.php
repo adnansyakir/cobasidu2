@@ -1,3 +1,4 @@
+akademikmhs.txt
 @extends('layouts.app')
 @section('title', 'Data Mahasiswa - SIDU')
 @section('page-title', 'Data Mahasiswa')
@@ -125,7 +126,6 @@
                     <th>Mahasiswa</th>
                     <th>NPM</th>
                     <th>Prodi</th>
-                    <th>Jenis Kelamin</th>
                     <th>Status</th>
                     <th>Nilai UKT</th>
                     <th>Aksi</th>
@@ -148,13 +148,6 @@
                     <td>
                         {{ $item->prodi?->nama_prodi ?? '-' }}<br>
                         <span style="font-size:11px;color:var(--text-muted)">{{ $item->prodi?->jurusan?->nama_jurusan ?? '' }}</span>
-                    </td>
-                    <td>
-                        @if($item->jenis_kelamin === 'L')
-                            <span class="badge badge-info">👦 Laki-laki</span>
-                        @else
-                            <span class="badge" style="background:#fdf2f8;color:#db2777;">👩 Perempuan</span>
-                        @endif
                     </td>
                     <td>
                         @if($item->status_akademik === 'Aktif')
@@ -193,6 +186,7 @@
     <form action="{{ route('akademik.mahasiswa.store') }}" method="POST">@csrf
         <div class="form-section-title">📋 Data Pribadi</div>
         <div class="form-group"><label>Nama Mahasiswa *</label><input type="text" name="nama_mahasiswa" class="form-control" placeholder="Nama lengkap mahasiswa" value="{{ old('nama_mahasiswa') }}" required></div>
+        <div class="form-group"><label>Email *</label><input type="email" name="email" class="form-control" placeholder="email@mahasiswa.ac.id" value="{{ old('email') }}" required></div>
         <div class="form-row-3">
             <div class="form-group"><label>NPM *</label><input type="text" name="npm" class="form-control" placeholder="2312XXXXX" value="{{ old('npm') }}" required></div>
             <div class="form-group"><label>Jenis Kelamin *</label>
@@ -202,7 +196,7 @@
                     <option value="P" {{ old('jenis_kelamin') === 'P' ? 'selected' : '' }}>Perempuan</option>
                 </select>
             </div>
-            <div class="form-group"><label>Tanggal Lahir</label><input type="date" name="tgl_lahir" class="form-control" value="{{ old('tgl_lahir') }}"></div>
+            <div class="form-group"><label>Tanggal Lahir *</label><input type="date" name="tgl_lahir" class="form-control" value="{{ old('tgl_lahir') }}" required><small class="text-muted">Digunakan sebagai password akun (format: ddmmyyyy)</small></div>
         </div>
 
         <div class="form-section-title">🏫 Data Akademik</div>
